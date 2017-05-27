@@ -1,0 +1,14 @@
+#!/bin/bash
+# local config file template used by killprocess.sh, use it to create killprocess.config 
+# killprocess.config is excluded from git
+
+KILLLIST=("htop")
+#email (if empty no email will sent)
+EMAIL="noemail@nomail.com"
+#max cpu % load
+MAX_CPU=50
+# max days for kill list processes
+MAX_DAYS=10
+# max days for process even if max_cpu not reached
+MAX_DAYS2=100
+

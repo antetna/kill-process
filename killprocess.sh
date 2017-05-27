@@ -33,6 +33,19 @@ NC=`tput sgr0` # No Color
 COLSNUM=""
 
 #
+# load local config
+#
+
+if [[ -f killprocess.config2 ]]; then
+   echo "${YELLOW}Loading settings from killprocess.config${NC}"
+   source killprocess.config
+else
+   echo "${RED}Could not load settings from killprocess.config, file does not exist.${NC}"
+fi
+
+echo $MAX_CPU $KILLLIST
+exit;
+#
 # PARSE ARGUMENTS
 #
 
@@ -42,7 +55,7 @@ if [ "$1" = "" ] || [ "$1" = "--help" ] || [ $# -lt 1 ] || [ $# -gt 3 ]; then
         "USAGE: bash $0 [dry|kill|--help] [top|ps] [cpu|time]" \
         "Example:" \
         "bash $0 dry" \
-        "bash $0 dry top" \
+        "bash  $0 dry top" \
         "bash $0 kill top cpu" \
         "For help:" \
         "bash $0" \
