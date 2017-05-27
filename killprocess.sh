@@ -15,10 +15,16 @@ KILLLIST=("/usr/sbin/apache2" "/usr/bin/php5-cgi")
 EMAIL="helpdesk@padosoft.com"
 #max cpu % load
 MAX_CPU=90
+# max days for kill list processes
+MAX_DAYS=10
+# max days for process even if max_cpu not reached
+MAX_DAYS2=100
+#######################################################################
+### do not edit bellow this point ###
 #max execution time for CPU percentage > MAX_CPU (in seconds 7200s=2h)
-MAX_SEC=1800
+MAX_SEC=$(( $MAX_DAYS * 24 * 3600 ))
 #max execution time for any %CPU (in seconds 2700s=45min)
-MAX_SEC2=2700
+MAX_SEC2=$(( $MAX_DAYS2 * 24 * 3600 ))
 #exclude root process (leave empty for match root process too)
 EXCLUDE_ROOT="grep -v root"
 #colors
@@ -35,7 +41,6 @@ COLSNUM=""
 #
 # load local config
 #
-
 if [[ -f killprocess.config2 ]]; then
    echo "${YELLOW}Loading settings from killprocess.config${NC}"
    source killprocess.config
@@ -43,8 +48,6 @@ else
    echo "${RED}Could not load settings from killprocess.config, file does not exist.${NC}"
 fi
 
-echo $MAX_CPU $KILLLIST
-exit;
 #
 # PARSE ARGUMENTS
 #
@@ -55,7 +58,7 @@ if [ "$1" = "" ] || [ "$1" = "--help" ] || [ $# -lt 1 ] || [ $# -gt 3 ]; then
         "USAGE: bash $0 [dry|kill|--help] [top|ps] [cpu|time]" \
         "Example:" \
         "bash $0 dry" \
-        "bash  $0 dry top" \
+        "bash $0 dry top" \
         "bash $0 kill top cpu" \
         "For help:" \
         "bash $0" \
@@ -126,13 +129,14 @@ do
 
     #pid
     if [ "$CMD" = "ps" ]; then
-      if [ "$COLSNUM" = "" ]; then    
-        PID=$(ps -eo pid,pcpu,time,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r | head -n 1 | awk '{print $1}')
+      if [ "$COLSNUM" = "" ]; then
+        PID=$(ps -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r -n | awk '$2 >= 50 {print}' | head -n 1 | awk '{print $1}')
+        echo "$(ps -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -n -r | awk '$2 >= 50 {print}'  | head -n 10)"
       else
-        PID=$(ps --cols ${COLSNUM} -eo pid,pcpu,time,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r | head -n 1 | awk '{print $1}')
+        PID=$(ps --cols ${COLSNUM} -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r | head -n 1 | awk '{print $1}')
       fi
     else
-      if [ "$COLSNUM" = "" ]; then    
+      if [ "$COLSNUM" = "" ]; then
         PID=$(top -bcSH -n 1 | $EXCLUDE_ROOT  | grep $PROCESS_TOCHECK | sort $SORTBYN -k $SORTBY -r | head -n 1 | awk '{print $1}')
       else
         PID=$(COLUMNS=${COLSNUM} top -bcSH -n 1 | $EXCLUDE_ROOT  | grep $PROCESS_TOCHECK | sort $SORTBYN -k $SORTBY -r | head -n 1 | awk '{print $1}')
@@ -272,7 +276,8 @@ do
         echo "CPU load from process $PNAME ( PID: $PID ) User: $USER has reached ${CPU}% for $TIME_STR. Process was killed."
         if [ ! -z $EMAIL ]; then
             echo "Send Mail to $EMAIL"
-            mail -s "WEB: CPU load from process $PNAME ( PID: $PID ) User: $USER has reached ${CPU}% for $TIME_STR. Process was killed." $EMAIL < .
+            echo "DEBUG: Send mail disabled"
+            #mail -s "WEB: CPU load from process $PNAME ( PID: $PID ) User: $USER has reached ${CPU}% for $TIME_STR. Process was killed." $EMAIL < .
         fi
         if [ "$KILL" = "1" ]; then
             echo "${RED}kill -15 $PID${NC}"
@@ -289,7 +294,8 @@ do
         echo "WEB: The process $PNAME ( PID: $PID ) User: $USER has running too long for $TIME_STR"
         if [ ! -z $EMAIL ]; then
             echo "Send Mail to $EMAIL"
-            mail -s "WEB: The process $PNAME ( PID: $PID ) User: $USER has running too long for $TIME_STR" $EMAIL < .
+            echo "DEBUG: Send mail disabled"
+            #mail -s "WEB: The process $PNAME ( PID: $PID ) User: $USER has running too long for $TIME_STR" $EMAIL < .
         fi
         if [ "$KILL" = "1" ]; then
             echo "${RED}kill -15 $PID${NC}"
