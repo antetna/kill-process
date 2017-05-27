@@ -41,13 +41,15 @@ COLSNUM=""
 #
 # load local config
 #
-if [[ -f killprocess.config ]]; then
-   echo "${YELLOW}Loading settings from killprocess.config${NC}"
-   source killprocess.config
-else
-   echo "${RED}Could not load settings from killprocess.config, file does not exist.${NC}"
-fi
+CONFIG_DIR=$( dirname "$(readlink -f "$0")" )
+CONFIG_FILE="$CONFIG_DIR/killprocess.config"
 
+if [[ -f $CONFIG_FILE ]]; then
+   echo "${YELLOW}Loading settings from $CONFIG_FILE. ${NC}"
+   source $CONFIG_FILE
+else
+   echo "${RED}Could not load settings from $CONFIG_FILE, file does not exist.${NC}"
+fi
 #
 # PARSE ARGUMENTS
 #
