@@ -41,7 +41,7 @@ COLSNUM=""
 #
 # load local config
 #
-if [[ -f killprocess.config2 ]]; then
+if [[ -f killprocess.config ]]; then
    echo "${YELLOW}Loading settings from killprocess.config${NC}"
    source killprocess.config
 else
@@ -68,10 +68,10 @@ if [ "$1" = "" ] || [ "$1" = "--help" ] || [ $# -lt 1 ] || [ $# -gt 3 ]; then
 fi
 
 #check if needed to set columns
-if [ "$COLSNUM" = "" ]; then    
+if [ "$COLSNUM" = "" ]; then
     echo "process use default environment columns number."
 else
-    echo "process set '${YELLOW}${COLSNUM}${NC}' columns number."        
+    echo "process set '${YELLOW}${COLSNUM}${NC}' columns number."
 fi
 
 #kill or not kill?
@@ -130,8 +130,8 @@ do
     #pid
     if [ "$CMD" = "ps" ]; then
       if [ "$COLSNUM" = "" ]; then
-        PID=$(ps -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r -n | awk '$2 >= 50 {print}' | head -n 1 | awk '{print $1}')
-        echo "$(ps -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -n -r | awk '$2 >= 50 {print}'  | head -n 10)"
+        PID=$(ps -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r -n | awk -v var=$MAX_CPU '$2 >= var {print}' | head -n 1 | awk '{print $1}')
+        #DEBUG: echo "$(ps -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -n -r | awk -v var=$MAX_CPU '$2 >= var {print}')"
       else
         PID=$(ps --cols ${COLSNUM} -eo pid,pcpu,etimes,command | $EXCLUDE_ROOT | grep $PROCESS_TOCHECK | sort -k $SORTBY -r | head -n 1 | awk '{print $1}')
       fi
